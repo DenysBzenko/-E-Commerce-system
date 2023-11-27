@@ -1,82 +1,104 @@
+
 #include <iostream>
 #include <vector>
 #include <string>
+#include <fstream>
+#include <sstream>
+#include <memory>
 
+// Base class Product
 class Product {
 protected:
+    int productID;
     std::string name;
     double price;
+    int quantityInStock;
 
 public:
-    Product(std::string n, double p) : name(n), price(p) {}
+    Product(int id, const std::string& name, double price, int quantity)
+        : productID(id), name(name), price(price), quantityInStock(quantity) {}
 
-    virtual void display() const {
-        std::cout << "Name: " << name << ", Price: " << price << std::endl;
+    virtual void displayProduct() const {
+        std::cout << "Product ID: " << productID << ", Name: " << name << ", Price: " << price << ", Quantity: " << quantityInStock << std::endl;
     }
 
+    // Additional methods can be added here
 };
 
+// Derived class Electronics
 class Electronics : public Product {
-    
 public:
-    Electronics(std::string n, double p) : Product(n, p) {}
+    Electronics(int id, const std::string& name, double price, int quantity)
+        : Product(id, name, price, quantity) {}
 
-    void display() const override {
-        Product::display();
-       
+    void displayProduct() const override {
+        std::cout << "Electronics - ";
+        Product::displayProduct();
     }
 };
 
+// Derived class Books
 class Books : public Product {
-   
 public:
-    Books(std::string n, double p) : Product(n, p) {}
+    Books(int id, const std::string& name, double price, int quantity)
+        : Product(id, name, price, quantity) {}
 
-    void display() const override {
-        Product::display();
-        
+    void displayProduct() const override {
+        std::cout << "Books - ";
+        Product::displayProduct();
     }
 };
 
+// Derived class Clothing
 class Clothing : public Product {
-  
 public:
-    Clothing(std::string n, double p) : Product(n, p) {}
+    Clothing(int id, const std::string& name, double price, int quantity)
+        : Product(id, name, price, quantity) {}
 
-    void display() const override {
-        Product::display();
-       
+    void displayProduct() const override {
+        std::cout << "Clothing - ";
+        Product::displayProduct();
     }
 };
 
+// Function to read config file and initialize products
+std::vector<std::shared_ptr<Product>> initializeProducts(const std::string& filename) {
+    std::vector<std::shared_ptr<Product>> products;
+    std::ifstream file(filename);
+    std::string line;
 
-class ProductCatalog {
-    std::vector<Product*> products;
+    while (std::getline(file, line)) {
+        if (line.empty() || line[0] == '#') continue; // Skip comments and empty lines
 
-public:
-    void addProduct(Product* product) {
-        products.push_back(product);
-    }
+        std::istringstream iss(line);
+        std::string type, name;
+        int id, quantity;
+        double price;
 
-    void displayCatalog() const {
-        for (const auto& product : products) {
-            product->display();
+        iss >> type >> id >> name >> price >> quantity;
+        if (type == "Electronics") {
+            products.push_back(std::make_shared<Electronics>(id, name, price, quantity));
+        }
+        else if (type == "Books") {
+            products.push_back(std::make_shared<Books>(id, name, price, quantity));
+        }
+        else if (type == "Clothing") {
+            products.push_back(std::make_shared<Clothing>(id, name, price, quantity));
         }
     }
 
-   
-};
+    return products;
+}
 
+// Main function
 int main() {
-    ProductCatalog catalog;
+    // Example initialization from a config file
+    auto products = initializeProducts("products.txt");
 
-    catalog.addProduct(new Electronics("Smartphone", 999.99));
-    catalog.addProduct(new Books("C++ Programming", 49.99));
-    catalog.addProduct(new Clothing("T-Shirt", 19.99));
-
-    catalog.displayCatalog();
-
-    
+    // Displaying initialized products
+    for (auto& product : products) {
+        product->displayProduct();
+    }
 
     return 0;
 }
